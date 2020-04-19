@@ -23,10 +23,9 @@ namespace Dora.Repository.EfCore
             throw new System.NotImplementedException();
         }
 
-        public Task SaveChangeAsync()
+        public async Task SaveChangeAsync()
         {
-            return dbContext.SaveChangesAsync();
-            throw new System.NotImplementedException();
+            await dbContext.SaveChangesAsync().ConfigureAwait(false);
         }
     }
 }

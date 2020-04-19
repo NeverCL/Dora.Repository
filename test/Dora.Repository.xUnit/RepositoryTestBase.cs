@@ -6,7 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Dora.Repository.xUnit
 {
-    public abstract class RepositoryTestBase
+    public abstract class RepositoryTestBase<TDbContext>
+        where TDbContext : DbContext
     {
         private ServiceProvider sp;
         protected readonly ServiceCollection collection;
@@ -18,7 +19,11 @@ namespace Dora.Repository.xUnit
             collection.AddTransient<IUnitOfWorkManager,UnitOfWorkManager>();
             collection.AddTransient<EfGenericRepositoryRegistrar>();
             collection.AddTransient<ServiceCollection>(s => collection);
-            sp = collection.BuildServiceProvider();
+            collection.AddTransient<DbContext, TDbContext>();
+            collection.AddTransient(typeof(IDbContextProvider), typeof(DefaultDbContextProvider<DbContext>));
+            ReBuild();
+            GetService<EfGenericRepositoryRegistrar>().RegisterForDbContext(typeof(TDbContext));
+            ReBuild();
         }
 
         protected void ReBuild()

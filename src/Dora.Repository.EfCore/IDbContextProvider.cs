@@ -9,13 +9,9 @@ namespace Dora.Repository.EfCore
     }
 
     public class DefaultDbContextProvider<TDbContext> : IDbContextProvider
-        where TDbContext : DbContext , new()
+        where TDbContext : DbContext
     {
         static ThreadLocal<TDbContext> _dbContext = new ThreadLocal<TDbContext>();
-        public DefaultDbContextProvider() : this(new TDbContext())
-        {
-
-        }
         public DefaultDbContextProvider(TDbContext dbContext)
         {
             if(_dbContext.IsValueCreated)

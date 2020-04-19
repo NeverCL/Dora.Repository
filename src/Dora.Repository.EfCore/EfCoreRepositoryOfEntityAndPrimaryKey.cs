@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Dora.Repository.Abstract;
 using Microsoft.EntityFrameworkCore;
@@ -19,14 +17,15 @@ namespace Dora.Repository.EfCore
             dbContext = dbContextProvider.GetDbContext();
         }
 
-        public override void Delete(TEntity entity)
-        {
-            throw new NotImplementedException();
-        }
-
         public override void Delete(TPrimaryKey id)
         {
-            throw new NotImplementedException();
+            var entity = GetAsync(id).Result;
+            dbContext.Remove(entity);
+        }
+
+        public override async Task<TEntity> GetAsync(TPrimaryKey id)
+        {
+            return await dbContext.Set<TEntity>().FindAsync(id).ConfigureAwait(false);
         }
 
         public override IQueryable<TEntity> GetAll()
@@ -34,15 +33,14 @@ namespace Dora.Repository.EfCore
             return dbContext.Set<TEntity>().AsQueryable();
         }
 
-        public override TEntity Insert(TEntity entity)
+        public override void Insert(TEntity entity)
         {
             dbContext.Add(entity);
-            return entity;
         }
 
-        public override TEntity Update(TEntity entity)
+        public override void Update(TEntity entity)
         {
-            throw new NotImplementedException();
+            dbContext.Update(entity);
         }
     }
 

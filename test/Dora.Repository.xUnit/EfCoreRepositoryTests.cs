@@ -3,38 +3,27 @@ using Dora.Repository.Abstract;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 using Shouldly;
-using System;
-using Microsoft.Extensions.DependencyInjection;
-using Dora.Repository.EfCore;
+using System.Diagnostics;
 
 namespace Dora.Repository.xUnit
 {
-    public class EfCoreRepositoryTests : RepositoryTestBase
+    public class EfCoreRepositoryTests : RepositoryTestBase<EfCoreRepositoryTests.MyDb>
     {
         readonly IRepository<User> _userRepository;
         readonly IUnitOfWorkManager _unitOfWorkManager;
-
         public EfCoreRepositoryTests()
         {
-            Init();
             _userRepository = GetService<IRepository<User>>();
             _unitOfWorkManager = GetService<IUnitOfWorkManager>();
         }
 
-        private void Init()
-        {
-            collection.AddTransient(typeof(IDbContextProvider), typeof(DefaultDbContextProvider<MyDb>));
-            GetService<EfGenericRepositoryRegistrar>().RegisterForDbContext(typeof(MyDb));
-            ReBuild();
-        }
-
-        class User : IEntity
+        public class User : IEntity
         {
             public int Id { get; set; }
             public string Name { get; set; }
         }
 
-        class MyDb: DbContext
+        public class MyDb: DbContext
         {
             public DbSet<User> Users { get; set; }
 
@@ -47,14 +36,31 @@ namespace Dora.Repository.xUnit
         [Fact]
         public async Task Insert_Entity() 
         {
+            var watch = Stopwatch.StartNew();
+            System.Console.WriteLine(watch.ElapsedMilliseconds);
             using (var uow = _unitOfWorkManager.Begin())
             {
-                var entity = new User{ Name = "foo" };
-                entity.IsTransient().ShouldBeTrue();
-                await _userRepository.InsertAsync(entity);
+                // insert
+                var user = new User{ Name = "foo" };
+                user.IsTransient().ShouldBeTrue();
+                _userRepository.Insert(user);
                 await uow.SaveChangeAsync();
-                entity.IsTransient().ShouldBeFalse();
+                user.IsTransient().ShouldBeFalse();
+                
+                // update
+                user.Name = "bar";
+                _userRepository.Update(user);
+                await uow.SaveChangeAsync();
+                var entity = await _userRepository.GetAsync(user.Id);
+                entity.Name.ShouldBe("bar");
+
+                // delete
+                _userRepository.Delete(user.Id);
+                await uow.SaveChangeAsync();
+                var count = await _userRepository.GetAll().CountAsync();
+                count.ShouldBe(0);
             }
+            System.Console.WriteLine(watch.ElapsedMilliseconds);
         }
     }
 }
