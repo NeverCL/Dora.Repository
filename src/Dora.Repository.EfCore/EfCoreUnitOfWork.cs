@@ -1,10 +1,11 @@
 using System.Threading.Tasks;
+using System.Threading;
 using Dora.Repository.Abstract;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dora.Repository.EfCore
 {
-    public class EfCoreUnitOfWork : IUnitOfWork
+    public class EfCoreUnitOfWork : UnitOfWorkBase
     {
         DbContext dbContext;
         
@@ -13,19 +14,19 @@ namespace Dora.Repository.EfCore
             dbContext = dbContextProvider.GetDbContext();
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             dbContext.Dispose();
         }
 
-        public Task RollBackAsync()
+        public override Task RollBackAsync(CancellationToken cancellationToken)
         {
-            throw new System.NotImplementedException();
+            return Task.CompletedTask;
         }
 
-        public async Task SaveChangeAsync()
+        public override async Task SaveChangeAsync(CancellationToken cancellationToken)
         {
-            await dbContext.SaveChangesAsync().ConfigureAwait(false);
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }
