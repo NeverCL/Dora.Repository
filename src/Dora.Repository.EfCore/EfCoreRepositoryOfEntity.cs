@@ -1,5 +1,4 @@
 using Dora.Repository.Abstract;
-using Dora.Repository.EfCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dora.Repository.EfCore

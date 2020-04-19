@@ -11,17 +11,12 @@ namespace Dora.Repository.EfCore
 {
     public class EfGenericRepositoryRegistrar
     {
-        private readonly ServiceCollection _collection;
-
-        public EfGenericRepositoryRegistrar(ServiceCollection collection)
-        {
-            this._collection = collection;
-        }
-
-        public void RegisterForDbContext(Type dbContextType)
+        public IEnumerable<(Type svcType,Type impType)> RegisterForDbContext<TDbContext>()
+            where TDbContext : DbContext
         {
             // IRepository<User, int> => Repository<Db, User, int>
             // IRepository<User> => Repository<Db, User>
+            var dbContextType = typeof(TDbContext);
             foreach (var entityType in GetEntityTypes(dbContextType))
             {
                 var primaryKeyType = GetPrimaryKeyType(entityType);
@@ -30,11 +25,11 @@ namespace Dora.Repository.EfCore
                 {
                     repoType = typeof(IRepository<>).MakeGenericType(entityType);
                     implType = typeof(EfCoreRepository<,>).MakeGenericType(dbContextType, entityType);
-                    _collection.AddTransient(repoType, implType);
+                    yield return (repoType, implType);
                 }
                 repoType = typeof(IRepository<,>).MakeGenericType(entityType, primaryKeyType);
                 implType = typeof(EfCoreRepository<,,>).MakeGenericType(dbContextType, entityType, primaryKeyType);
-                _collection.AddTransient(repoType, implType);
+                yield return (repoType, implType);
             }
         }
 

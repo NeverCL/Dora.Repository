@@ -36,7 +36,7 @@ namespace Dora.Repository.xUnit
         [Fact]
         public async Task Insert_Entity() 
         {
-            await WatchInvokeAsync(async ()=>{
+            await WatchInvokeAsync(async () => {
                 using (var uow = _unitOfWorkManager.Begin())
                 {
                     // insert
@@ -50,13 +50,13 @@ namespace Dora.Repository.xUnit
                     user.Name = System.Guid.NewGuid().ToString();
                     _userRepository.Update(user);
                     await uow.SaveChangeAsync();
-                    var entity = await _userRepository.GetAsync(user.Id);
+                    var entity = await _userRepository.GetAsync(user.Id);   // get
                     entity.Name.ShouldBe(user.Name);
 
                     // delete
                     _userRepository.Delete(user.Id);
                     await uow.SaveChangeAsync();
-                    var count = await _userRepository.GetAll().CountAsync();
+                    var count = await _userRepository.GetAll().CountAsync(); // getall
                     count.ShouldBe(0);
                 }
             });
