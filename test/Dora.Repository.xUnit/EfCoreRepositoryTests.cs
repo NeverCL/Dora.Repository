@@ -36,31 +36,30 @@ namespace Dora.Repository.xUnit
         [Fact]
         public async Task Insert_Entity() 
         {
-            var watch = Stopwatch.StartNew();
-            System.Console.WriteLine(watch.ElapsedMilliseconds);
-            using (var uow = _unitOfWorkManager.Begin())
-            {
-                // insert
-                var user = new User{ Name = "foo" };
-                user.IsTransient().ShouldBeTrue();
-                _userRepository.Insert(user);
-                await uow.SaveChangeAsync();
-                user.IsTransient().ShouldBeFalse();
-                
-                // update
-                user.Name = "bar";
-                _userRepository.Update(user);
-                await uow.SaveChangeAsync();
-                var entity = await _userRepository.GetAsync(user.Id);
-                entity.Name.ShouldBe("bar");
+            await WatchInvokeAsync(async ()=>{
+                using (var uow = _unitOfWorkManager.Begin())
+                {
+                    // insert
+                    var user = new User{ Name = "foo" };
+                    user.IsTransient().ShouldBeTrue();
+                    _userRepository.Insert(user);
+                    await uow.SaveChangeAsync();
+                    user.IsTransient().ShouldBeFalse();
+                    
+                    // update
+                    user.Name = System.Guid.NewGuid().ToString();
+                    _userRepository.Update(user);
+                    await uow.SaveChangeAsync();
+                    var entity = await _userRepository.GetAsync(user.Id);
+                    entity.Name.ShouldBe(user.Name);
 
-                // delete
-                _userRepository.Delete(user.Id);
-                await uow.SaveChangeAsync();
-                var count = await _userRepository.GetAll().CountAsync();
-                count.ShouldBe(0);
-            }
-            System.Console.WriteLine(watch.ElapsedMilliseconds);
+                    // delete
+                    _userRepository.Delete(user.Id);
+                    await uow.SaveChangeAsync();
+                    var count = await _userRepository.GetAll().CountAsync();
+                    count.ShouldBe(0);
+                }
+            });
         }
     }
 }

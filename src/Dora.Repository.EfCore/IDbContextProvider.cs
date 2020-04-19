@@ -11,17 +11,19 @@ namespace Dora.Repository.EfCore
     public class DefaultDbContextProvider<TDbContext> : IDbContextProvider
         where TDbContext : DbContext
     {
-        static ThreadLocal<TDbContext> _dbContext = new ThreadLocal<TDbContext>();
+        // static AsyncLocal<TDbContext> _dbContext = new AsyncLocal<TDbContext>();
+        static TDbContext _dbContext;
         public DefaultDbContextProvider(TDbContext dbContext)
         {
-            if(_dbContext.IsValueCreated)
-                return;                
-            _dbContext.Value = dbContext;
+            // if(_dbContext.Value != null)
+            //     return;
+            // _dbContext.Value = dbContext;
+            _dbContext = dbContext;
         }
 
         public DbContext GetDbContext()
         {
-            return _dbContext.Value;
+            return _dbContext;
         }
     }
 }
