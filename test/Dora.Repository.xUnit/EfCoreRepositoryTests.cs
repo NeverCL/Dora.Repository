@@ -3,7 +3,6 @@ using Dora.Repository.Abstract;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 using Shouldly;
-using System.Diagnostics;
 
 namespace Dora.Repository.xUnit
 {

@@ -2,12 +2,6 @@ using System;
 
 namespace Dora.Repository.Abstract
 {
-    public interface IUnitOfWorkManager
-    {
-        IUnitOfWork Current { get; }
-        IUnitOfWork Begin();
-    }
-
     public class UnitOfWorkManager : IUnitOfWorkManager
     {
         private IUnitOfWork _uow;
