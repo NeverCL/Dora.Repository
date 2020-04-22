@@ -11,12 +11,18 @@ namespace Dora.Repository.Benchmark.Benchmarks
     {
         private readonly ServiceProvider sp;
 
+        public IRepository<User> userRep { get; }
+
+        private readonly IUnitOfWorkManager uowManager;
+
         public CrudBenchmarks()
         {
             sp = default(ServiceCollection).AddEfCoreRepository<MyDb>().BuildServiceProvider();
+            userRep = sp.GetService<IRepository<User>>();
+            uowManager = sp.GetService<IUnitOfWorkManager>();
         }
 
-        [Benchmark]
+        [Benchmark(Baseline = true)]
         public async Task NativeInsert()
         {
             using (var db = new MyDb())
@@ -29,10 +35,9 @@ namespace Dora.Repository.Benchmark.Benchmarks
         [Benchmark]
         public async Task RepositoryInsertAsync()
         {
-            var rep = sp.GetService<IRepository<User>>();
-            using (var uow = sp.GetService<IUnitOfWork>())
+            using (var uow = uowManager.Begin())
             {
-                rep.Insert(new User { Name = "1" });
+                userRep.Insert(new User { Name = "1" });
                 await uow.SaveChangeAsync();
             }
         }

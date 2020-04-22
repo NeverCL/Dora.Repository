@@ -3,6 +3,9 @@ using Dora.Repository.Abstract;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 using Shouldly;
+using System;
+using System.Data;
+using System.Data.Common;
 
 namespace Dora.Repository.xUnit
 {
@@ -22,7 +25,7 @@ namespace Dora.Repository.xUnit
             public string Name { get; set; }
         }
 
-        public class MyDb: DbContext
+        public class MyDb : DbContext
         {
             public DbSet<User> Users { get; set; }
 
@@ -32,10 +35,10 @@ namespace Dora.Repository.xUnit
             }
         }
 
-        [Fact]
+        // [Fact]
         public async Task Insert_Entity() 
         {
-            await WatchInvokeAsync(async () => {
+            Func<Task> func = async()=>{
                 using (var uow = _unitOfWorkManager.Begin())
                 {
                     // insert
@@ -58,7 +61,44 @@ namespace Dora.Repository.xUnit
                     var count = await _userRepository.GetAll().CountAsync(); // getall
                     count.ShouldBe(0);
                 }
-            });
+            };
+            await WatchInvokeAsync(func, 3);
+        }
+
+        // [Fact]
+        public void Parallel_Insert_Entity() 
+        {
+            Func<Task> func = async()=>{
+                using (var uow = _unitOfWorkManager.Begin())
+                {
+                    // insert
+                    var user = new User{ Name = "foo" };
+                    user.IsTransient().ShouldBeTrue();
+                    _userRepository.Insert(user);
+                    await uow.SaveChangeAsync();
+                    user.IsTransient().ShouldBeFalse();
+                }
+            };
+
+            WatchParallelInvokeAsync(func, 100);
+        }
+
+        [Fact]
+        public async Task Nested_Insert_Entity() 
+        {
+            using (var uow = _unitOfWorkManager.Begin())
+            {
+                using (var uow2 = _unitOfWorkManager.Begin())
+                {
+                    // insert
+
+                }
+                var user = new User{ Name = "foo" };
+                user.IsTransient().ShouldBeTrue();
+                _userRepository.Insert(user);
+                await uow.SaveChangeAsync();
+                user.IsTransient().ShouldBeFalse();
+            }
         }
     }
 }

@@ -32,5 +32,15 @@ namespace Dora.Repository.xUnit
                 Console.WriteLine(i + " end :" + watch.ElapsedMilliseconds);
             }
         }
+
+        protected void WatchParallelInvokeAsync(Func<Task> func, int times = 3)
+        {
+            Parallel.For(0,times,async i => {
+                var watch = System.Diagnostics.Stopwatch.StartNew();
+                Console.WriteLine(i + " begin :" + watch.ElapsedMilliseconds);
+                await func();
+                Console.WriteLine(i + " end :" + watch.ElapsedMilliseconds);
+            });
+        }
     }
 }

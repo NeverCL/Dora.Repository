@@ -7,16 +7,17 @@ namespace Dora.Repository.EfCore
 {
     public class EfCoreUnitOfWork : UnitOfWorkBase
     {
-        DbContext dbContext;
+        private readonly IDbContextProvider dbContextProvider;
+        DbContext dbContext => dbContextProvider.GetDbContext();
         
         public EfCoreUnitOfWork(IDbContextProvider dbContextProvider)
         {
-            dbContext = dbContextProvider.GetDbContext();
+            this.dbContextProvider = dbContextProvider;
         }
 
         public override void Dispose()
         {
-            dbContext.Dispose();
+            dbContextProvider.Dispose();
         }
 
         public override Task RollBackAsync(CancellationToken cancellationToken)

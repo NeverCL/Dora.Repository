@@ -1,3 +1,5 @@
+using System;
+using System.Threading;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dora.Repository.EfCore
@@ -5,15 +7,26 @@ namespace Dora.Repository.EfCore
     public class DefaultDbContextProvider<TDbContext> : IDbContextProvider
         where TDbContext : DbContext
     {
-        static TDbContext _dbContext;
-        public DefaultDbContextProvider(TDbContext dbContext)
+        readonly static AsyncLocal<TDbContext> _dbContext = new AsyncLocal<TDbContext>();
+        private readonly IServiceProvider sp;
+
+        public DefaultDbContextProvider(IServiceProvider sp)
         {
-            _dbContext = dbContext;
+            this.sp = sp;
+        }
+        
+        public void Dispose()
+        {
+            _dbContext.Value?.DisposeAsync();
+            _dbContext.Value = null;
         }
 
         public DbContext GetDbContext()
         {
-            return _dbContext;
+             if (_dbContext.Value != null)
+                return _dbContext.Value;
+            _dbContext.Value = sp.GetService(typeof(TDbContext)) as TDbContext;
+            return _dbContext.Value;
         }
     }
 }

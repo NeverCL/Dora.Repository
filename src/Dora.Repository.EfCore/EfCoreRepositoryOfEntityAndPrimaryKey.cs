@@ -11,10 +11,12 @@ namespace Dora.Repository.EfCore
         where TDbContext : DbContext
         where TEntity : class, IEntity<TPrimaryKey>
     {
-        DbContext dbContext;
+        private readonly IDbContextProvider dbContextProvider;
+        DbContext dbContext => dbContextProvider.GetDbContext();
         public EfCoreRepository(IDbContextProvider dbContextProvider)
         {
-            dbContext = dbContextProvider.GetDbContext();
+            // dbContext = dbContextProvider.GetDbContext();
+            this.dbContextProvider = dbContextProvider;
         }
 
         public override void Delete(TPrimaryKey id)
